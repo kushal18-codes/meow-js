@@ -1,0 +1,3 @@
+# Simple hello world program
+"Hello World!" meow;      # Output the string "Hello World!"
+"Welcome to MeowJS!" meow; # Output welcome message

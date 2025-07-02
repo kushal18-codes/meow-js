@@ -1,0 +1,4 @@
+# Conditional comparison example
+5 nest number1;                          # Store 5 in variable "number1"
+3 nest number2;                          # Store 3 in variable "number2"
+fetch number1 fetch number2 tower whiskers "greater" meow tail;  # Compare if number1 > number2, if true output "greater"

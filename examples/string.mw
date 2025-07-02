@@ -1,0 +1,3 @@
+# String storage and retrieval example
+"world" catnip;         # Store "world" in string storage
+"hello" paw meow;       # Store "hello" in string storage, then output it

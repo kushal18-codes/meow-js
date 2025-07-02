@@ -1,0 +1,4 @@
+# Data structure storage example
+"data1" climb "data2" climb 1 litter;  # Push two strings to stack, store at key 1
+1 box fall meow;                       # Retrieve data from key 1, pop and output first item
+fall meow;                             # Pop and output second item

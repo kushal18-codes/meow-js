@@ -1,0 +1,3 @@
+# Function definition and calling example
+"hello" meow prowl sayHello;  # Define function "sayHello" that outputs "hello"
+fetch sayHello stalk;         # Call the "sayHello" function
