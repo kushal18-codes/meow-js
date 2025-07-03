@@ -5,8 +5,18 @@ const path = require("path");
 const readline = require("readline");
 
 class MeowJSInterpreter {
-  constructor() {
-    this.reset();
+  constructor(debug = false) {
+    this.debug = debug;
+    this.value = 0;
+    this.stack = [];
+    this.memory = [];
+    this.loopStack = [];
+    this.ifStack = [];
+    this.programCounter = 0;
+    this.stringStorage = "";
+    this.dataStorage = {};
+    this.variables = {};
+    this.functions = {};
     this.commandMap = {
       meow: "output",
       purr: "increment",
@@ -64,12 +74,12 @@ class MeowJSInterpreter {
     this.memory = [];
     this.loopStack = [];
     this.ifStack = [];
-    this.output = "";
     this.programCounter = 0;
     this.stringStorage = "";
     this.dataStorage = {};
     this.variables = {};
     this.functions = {};
+    this.jumpMap = {};
   }
 
   async parseFile(filepath) {
@@ -83,89 +93,70 @@ class MeowJSInterpreter {
 
   parseCode(code) {
     const tokens = [];
-    let current = "";
-    let inString = false;
-    let stringDelimiter = "";
-    let inComment = false;
+    const regex = /(".*?")|('.*?')|(#[^\n]*)|([a-zA-Z_][a-zA-Z0-9_]*)|(;)/gm;
+    let match;
 
-    for (const char of code) {
-      if (char === "#" && !inString) {
-        if (current.trim()) {
-          tokens.push(current.trim());
-          current = "";
-        }
-        inComment = true;
-        continue;
+    while ((match = regex.exec(code)) !== null) {
+      // Group 1: double-quoted string, Group 2: single-quoted string, Group 3: comment, Group 4: semicolon, Group 5: other word
+      if (match[1]) { // Double-quoted string
+        tokens.push(match[1]);
+      } else if (match[2]) { // Single-quoted string
+        tokens.push(match[2]);
+      } else if (match[3]) { // Comment
+        // Ignore comments
+      } else if (match[4]) { // Semicolon
+        tokens.push(match[4]);
+      } else if (match[5]) { // Other word
+        tokens.push(match[5]);
       }
-
-      if (char === "\n" && inComment) {
-        inComment = false;
-        continue;
-      }
-
-      if (inComment) {
-        continue;
-      }
-
-      if ((char === '"' || char === "'") && !inString) {
-        if (current.trim()) {
-          tokens.push(current.trim());
-          current = "";
-        }
-        inString = true;
-        stringDelimiter = char;
-        current = char;
-        continue;
-      }
-
-      if (char === stringDelimiter && inString) {
-        current += char;
-        tokens.push(current);
-        current = "";
-        inString = false;
-        stringDelimiter = "";
-        continue;
-      }
-
-      if (inString) {
-        current += char;
-        continue;
-      }
-
-      if (/\s/.test(char)) {
-        if (current.trim()) {
-          tokens.push(current.trim());
-          current = "";
-        }
-        continue;
-      }
-
-      if (this.commandMap[char]) {
-        if (current.trim()) {
-          tokens.push(current.trim());
-          current = "";
-        }
-        tokens.push(char);
-        continue;
-      }
-
-      current += char;
     }
-
-    if (current.trim()) {
-      tokens.push(current.trim());
+    if (this.debug) {
+      console.log("Parsed tokens:", tokens);
     }
+    return tokens;
+  }
 
-    return tokens.filter((token) => token.length > 0);
+  preProcessJumps(tokens) {
+    const jumpMap = {};
+    const loopStack = [];
+    const ifStack = [];
+    const commandMap = this.commandMap;
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const command = commandMap[token.toLowerCase()] || commandMap[token];
+
+      if (command === "loop_start") {
+        loopStack.push(i);
+      } else if (command === "if_start") {
+        ifStack.push(i);
+      } else if (command === "loop_end") {
+        if (loopStack.length > 0) {
+          const startPc = loopStack.pop();
+          jumpMap[startPc] = i;
+          jumpMap[i] = startPc;
+        }
+      } else if (command === "if_end") {
+        if (ifStack.length > 0) {
+          const startPc = ifStack.pop();
+          jumpMap[startPc] = i;
+          jumpMap[i] = startPc;
+        }
+      }
+    }
+    return jumpMap;
   }
 
   async execute(tokens) {
     this.reset();
     const startTime = Date.now();
 
-    console.log("\nStarting MeowJS execution...");
-    console.log(`Number of commands: ${tokens.length}\n`);
+    if (this.debug) {
+      console.log("\nStarting MeowJS execution...");
+      console.log(`Number of commands: ${tokens.length}\n`);
+    }
 
+    this.jumpMap = this.preProcessJumps(tokens);
     this.programCounter = 0;
     while (this.programCounter < tokens.length) {
       const token = tokens[this.programCounter];
@@ -174,24 +165,28 @@ class MeowJSInterpreter {
     }
 
     const endTime = Date.now();
-    console.log(`\nExecution completed in ${endTime - startTime}ms\n`);
-
+    if (this.debug) {
+      console.log(`
+Execution completed in ${endTime - startTime}ms\n`);
+    }
     return this.output;
   }
 
   async executeCommand(token, tokens) {
+    if (this.debug) {
+      console.log(`Executing token: ${token}`);
+      console.log(`Current stringStorage: ${this.stringStorage}`);
+    }
+
     if (token.startsWith('"') && token.endsWith('"')) {
       this.stringStorage = token.slice(1, -1);
-      return;
-    }
-
-    if (token.startsWith("'") && token.endsWith("'")) {
+      return; // String literal handled, move to next token
+    } else if (token.startsWith('\'') && token.endsWith('\'')) {
       this.stringStorage = token.slice(1, -1);
-      return;
+      return; // String literal handled, move to next token
     }
 
-    const command =
-      this.commandMap[token.toLowerCase()] || this.commandMap[token];
+    const command = this.commandMap[token.toLowerCase()] || this.commandMap[token];
 
     if (!command) {
       if (!isNaN(token)) {
@@ -199,19 +194,11 @@ class MeowJSInterpreter {
       } else {
         this.stack.push(token);
       }
-      return;
+      return; // Exit if it's a number or unknown token
     }
 
     switch (command) {
-      case "output":
-        if (this.stringStorage) {
-          process.stdout.write(this.stringStorage);
-          this.output += this.stringStorage;
-        } else {
-          process.stdout.write(this.value.toString());
-          this.output += this.value.toString();
-        }
-        break;
+      case "output":        if (this.stringStorage) {          process.stdout.write(this.stringStorage + "\n");        } else {          process.stdout.write(this.value.toString() + "\n");        }        break;
 
       case "increment":
         this.value++;
@@ -237,10 +224,7 @@ class MeowJSInterpreter {
         this.value *= 2;
         break;
 
-      case "newline":
-        process.stdout.write("\n");
-        this.output += "\n";
-        break;
+      case "newline":        process.stdout.write("\n");        break;
 
       case "input":
         this.value = await this.getInput();
@@ -255,10 +239,13 @@ class MeowJSInterpreter {
         break;
 
       case "loop_start":
-        this.loopStack.push({
-          start: this.programCounter,
-          count: this.value,
-        });
+        if (this.value <= 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        } else {
+          this.loopStack.push({
+            count: this.value,
+          });
+        }
         break;
 
       case "loop_end":
@@ -267,7 +254,7 @@ class MeowJSInterpreter {
           loop.count--;
 
           if (loop.count > 0) {
-            this.programCounter = loop.start;
+            this.programCounter = this.jumpMap[this.programCounter];
           } else {
             this.loopStack.pop();
           }
@@ -275,16 +262,13 @@ class MeowJSInterpreter {
         break;
 
       case "if_start":
-        this.ifStack.push({
-          condition: this.value > 0,
-          start: this.programCounter,
-        });
+        if (this.value <= 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
         break;
 
       case "if_end":
-        if (this.ifStack.length > 0) {
-          this.ifStack.pop();
-        }
+        // No-op, handled by if_start
         break;
 
       case "store_string":
@@ -336,7 +320,8 @@ class MeowJSInterpreter {
         const varValue = this.variables[getVarName];
         if (typeof varValue === "string") {
           this.stringStorage = varValue;
-        } else {
+        }
+        else {
           this.value = varValue || 0;
         }
         break;
@@ -374,8 +359,8 @@ class MeowJSInterpreter {
 
       case "statement_end":
         process.stdout.write("\n");
-        this.output += "\n";
         break;
+      
     }
   }
 
@@ -507,54 +492,69 @@ class MeowJSCommandLine {
 
   static async main() {
     const args = process.argv.slice(2);
+    let debugMode = false;
+    let filePath = null;
 
     if (args.length === 0) {
       MeowJSCommandLine.showHelp();
       return;
     }
 
-    const arg = args[0];
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      switch (arg) {
+        case "-h":
+        case "--help":
+          MeowJSCommandLine.showHelp();
+          return;
 
-    switch (arg) {
-      case "-h":
-      case "--help":
-        MeowJSCommandLine.showHelp();
-        break;
+        case "-v":
+        case "--version":
+          MeowJSCommandLine.showVersion();
+          return;
 
-      case "-v":
-      case "--version":
-        MeowJSCommandLine.showVersion();
-        break;
+        case "-i":
+        case "--info":
+          MeowJSCommandLine.showCommandReference();
+          return;
 
-      case "-i":
-      case "--info":
-        MeowJSCommandLine.showCommandReference();
-        break;
+        case "-d":
+        case "--debug":
+          debugMode = true;
+          break;
 
-      case "--repl":
-        await MeowJSCommandLine.startREPL();
-        break;
+        case "--repl":
+          await MeowJSCommandLine.startREPL();
+          return;
 
-      default:
-        if (!arg.endsWith(".mw")) {
-          console.log("😿 Error: MeowJS files must have .mw extension");
-          process.exit(1);
-        }
+        default:
+          if (arg.endsWith(".mw")) {
+            filePath = arg;
+          } else {
+            console.log("😿 Error: Unknown argument or invalid file extension");
+            process.exit(1);
+          }
+          break;
+      }
+    }
 
-        if (!fs.existsSync(arg)) {
-          console.log(`😿 Error: File ${arg} not found`);
-          process.exit(1);
-        }
+    if (filePath) {
+      if (!fs.existsSync(filePath)) {
+        console.log(`😿 Error: File ${filePath} not found`);
+        process.exit(1);
+      }
 
-        try {
-          const interpreter = new MeowJSInterpreter();
-          const tokens = await interpreter.parseFile(arg);
-          await interpreter.execute(tokens);
-        } catch (error) {
-          console.log(`😿 Error: ${error.message}`);
-          process.exit(1);
-        }
-        break;
+      try {
+        const interpreter = new MeowJSInterpreter(debugMode);
+        const tokens = await interpreter.parseFile(filePath);
+        await interpreter.execute(tokens);
+      } catch (error) {
+        console.log(`😿 Error: ${error.message}`);
+        process.exit(1);
+      }
+    } else if (!debugMode) {
+      // If no file path and not in debug mode, show help
+      MeowJSCommandLine.showHelp();
     }
   }
 }
