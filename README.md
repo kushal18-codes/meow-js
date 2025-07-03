@@ -6,13 +6,15 @@ A cat-themed esoteric programming language that's purr-fectly functional!
 
 ## Features
 
-- **Cat-themed commands**: Use natural feline terminology like `meow`, `purr`, `hiss`, `climb`, and `prowl`
-- **Variables**: Store and retrieve data with `nest` and `fetch`
-- **Functions**: Define reusable code blocks with `prowl` and call them with `stalk`
-- **Data structures**: Stack operations and key-value storage
-- **Control flow**: Loops with `yarn`/`ball` and conditionals with `whiskers`/`tail`
-- **String handling**: Store and manipulate strings with cat-themed commands
-- **Comments**: Use `#` for single-line comments
+- **Cat-themed Commands**: A rich set of commands inspired by feline behavior.
+- **Variables**: Store and retrieve values using `nest` and `fetch`.
+- **Functions**: Define and call reusable blocks of code with `prowl` and `stalk`.
+- **Data Structures**: Includes stack operations (`climb`, `fall`) and key-value storage (`litter`, `box`).
+- **Control Flow**: Conditional blocks with `whiskers` and `tail`, and loops with `yarn` and `ball`.
+- **String Manipulation**: Handle strings with `catnip` and `paw`.
+- **Arithmetic and Comparison**: Perform calculations (`leap`, `duck`) and comparisons (`sniff`, `tower`, `crouch`).
+- **Interactive REPL**: Experiment with MeowJS in an interactive shell.
+- **File Execution**: Run MeowJS scripts from `.mw` files.
 
 ## Installation
 
@@ -50,7 +52,7 @@ node src/meow-js.js --info
 | `purr` | Increment | Add 1 to current value |
 | `hiss` | Decrement | Subtract 1 from current value |
 | `scratch` | Random | Generate random number (1-9) |
-| `sleep` | Delay | Pause execution briefly |
+| `nap` | Delay | Pause execution briefly |
 | `groom` | Reset | Set current value to 0 |
 | `pounce` | Multiply | Double current value |
 | `stretch` | Newline | Print newline character |
@@ -65,7 +67,7 @@ node src/meow-js.js --info
 | `tail` | If End | End conditional block |
 | `yarn` | Loop Start | Begin loop |
 | `ball` | Loop End | End loop |
-| `claw` | Store String | Store string value |
+| `catnip` | Store String | Store string value |
 | `paw` | Retrieve String | Get stored string |
 | `litter` | Store Data | Store data structure |
 | `box` | Retrieve Data | Get stored data |
@@ -79,6 +81,7 @@ node src/meow-js.js --info
 ## Examples
 
 ### Hello World
+
 ```meow
 # Simple hello world program
 "Hello World!" meow;      # Output the string "Hello World!"
@@ -86,25 +89,19 @@ node src/meow-js.js --info
 ```
 
 ### Variables
+
 ```meow
 # Variable storage and retrieval example
-"hello" nest greeting;    # Store "hello" in variable called "greeting"
-fetch greeting meow;      # Get value from "greeting" variable and output it
-```
-
-### Functions
-```meow
-# Function definition and calling example
-"hello" meow prowl sayHello;  # Define function "sayHello" that outputs "hello"
-fetch sayHello stalk;         # Call the "sayHello" function
+greeting "hello" nest;    # Store "hello" in variable called "greeting"
+greeting fetch meow;      # Get value from "greeting" variable and output it
 ```
 
 ### Conditionals
+
 ```meow
 # Conditional comparison example
-5 nest number1;                          # Store 5 in variable "number1"
-3 nest number2;                          # Store 3 in variable "number2"
-fetch number1 fetch number2 tower whiskers "greater" meow tail;  # Compare if number1 > number2, if true output "greater"
+3 climb;                                 # Push 3 onto the stack
+5 tower whiskers "5 is greater" meow tail; # Compares 5 (current value) > 3 (on stack)
 ```
 
 ## File Extension
