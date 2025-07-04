@@ -1,0 +1,27 @@
+{
+  "name": "meow-js",
+  "version": "1.0.0",
+  "description": "A cat-themed esoteric programming language",
+  "main": "src/meow-js.js",
+  "bin": {
+    "meow": "src/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kushal18-codes/meow-js.git"
+  },
+  "keywords": [
+    "esolang",
+    "esoteric",
+    "programming",
+    "language",
+    "cat-themed",
+    "functional",
+    "interpreter"
+  ],
+  "author": "",
+  "license": "MIT"
+}
