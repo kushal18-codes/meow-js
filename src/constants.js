@@ -1,4 +1,4 @@
-const commandMap = {
+var commandMap = {
   meow: "output",
   purr: "increment",
   hiss: "decrement",
@@ -48,4 +48,8 @@ const commandMap = {
   ";": "statement_end",
 };
 
-module.exports = { commandMap };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { commandMap };
+} else if (typeof window !== "undefined") {
+  window.commandMap = commandMap;
+}

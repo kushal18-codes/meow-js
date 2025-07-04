@@ -1,10 +1,14 @@
-const fs = require("fs");
-const readline = require("readline");
-const { commandMap } = require("./constants");
+var fs = typeof require !== "undefined" ? require("fs") : null;
+var readline = typeof require !== "undefined" ? require("readline") : null;
+var commandMap =
+  typeof window !== "undefined"
+    ? window.commandMap
+    : require("./constants").commandMap;
 
 class MeowJSInterpreter {
-  constructor(debug = false) {
+  constructor(debug = false, outputElement = null) {
     this.debug = debug;
+    this.outputElement = outputElement;
     this.reset();
   }
 
@@ -20,6 +24,9 @@ class MeowJSInterpreter {
     this.variables = {};
     this.functions = {};
     this.jumpMap = {};
+    if (this.outputElement) {
+      this.outputElement.textContent = "";
+    }
   }
 
   async parseFile(filepath) {
@@ -190,7 +197,13 @@ Execution completed in ${endTime - startTime}ms\n`);
       greater_than: this.handleComparisonCommands,
       less_than: this.handleComparisonCommands,
       // Statement End
-      statement_end: () => process.stdout.write("\n"),
+      statement_end: () => {
+        if (typeof process !== "undefined" && process.stdout) {
+          process.stdout.write("\n");
+        } else if (this.outputElement) {
+          this.outputElement.textContent += "\n";
+        }
+      },
     };
     return commandHandlers[command];
   }
@@ -199,9 +212,17 @@ Execution completed in ${endTime - startTime}ms\n`);
     switch (command) {
       case "output":
         if (this.stringStorage) {
-          process.stdout.write(this.stringStorage + "\n");
+          if (typeof process !== "undefined" && process.stdout) {
+            process.stdout.write(this.stringStorage + "\n");
+          } else if (this.outputElement) {
+            this.outputElement.textContent += this.stringStorage + "\n";
+          }
         } else {
-          process.stdout.write(this.value.toString() + "\n");
+          if (typeof process !== "undefined" && process.stdout) {
+            process.stdout.write(this.value.toString() + "\n");
+          } else if (this.outputElement) {
+            this.outputElement.textContent += this.value.toString() + "\n";
+          }
         }
         return true;
       case "increment":
@@ -222,7 +243,11 @@ Execution completed in ${endTime - startTime}ms\n`);
         this.value *= 2;
         return true;
       case "newline":
-        process.stdout.write("\n");
+        if (typeof process !== "undefined" && process.stdout) {
+          process.stdout.write("\n");
+        } else if (this.outputElement) {
+          this.outputElement.textContent += "\n";
+        }
         return true;
       case "input":
         return false;
@@ -390,19 +415,31 @@ Execution completed in ${endTime - startTime}ms\n`);
   }
 
   async getInput() {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
+    if (typeof readline !== "undefined" && readline) {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
 
-    return new Promise((resolve) => {
-      rl.question("🐱 Input a number: ", (answer) => {
-        const num = parseInt(answer) || 0;
-        rl.close();
+      return new Promise((resolve) => {
+        rl.question("🐱 Input a number: ", (answer) => {
+          const num = parseInt(answer) || 0;
+          rl.close();
+          resolve(num);
+        });
+      });
+    } else {
+      return new Promise((resolve) => {
+        const input = prompt("🐱 Input a number:");
+        const num = parseInt(input) || 0;
         resolve(num);
       });
-    });
+    }
   }
 }
 
-module.exports = { MeowJSInterpreter };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { MeowJSInterpreter };
+} else if (typeof window !== "undefined") {
+  window.MeowJSInterpreter = MeowJSInterpreter;
+}

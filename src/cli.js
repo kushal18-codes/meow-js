@@ -57,7 +57,7 @@ class MeowJSCommandLine {
   }
 
   static async startREPL() {
-    const interpreter = new MeowJSInterpreter();
+    const interpreter = new MeowJSInterpreter(false, null);
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -162,7 +162,7 @@ class MeowJSCommandLine {
       }
 
       try {
-        const interpreter = new MeowJSInterpreter(debugMode);
+        const interpreter = new MeowJSInterpreter(debugMode, null);
         const tokens = await interpreter.parseFile(filePath);
         await interpreter.execute(tokens);
       } catch (error) {
