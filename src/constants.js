@@ -1,4 +1,4 @@
-var commandMap = {
+let commandMap = {
   meow: "output",
   purr: "increment",
   hiss: "decrement",
