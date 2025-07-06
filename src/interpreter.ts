@@ -56,7 +56,7 @@ export class MeowJSInterpreter {
       } else if (match[2]) {
         tokens.push(match[2]);
       } else if (match[3]) {
-        // Ignore comments
+        continue;
       } else if (match[4]) {
         tokens.push(match[4]);
       } else if (match[5]) {
@@ -109,21 +109,81 @@ export class MeowJSInterpreter {
     return this.output;
   }
 
-  async executeCommand(token: string, tokens: string[]): Promise<void> {
-    if (this.isStringLiteral(token)) {
-      this.stringStorage = token.slice(1, -1);
-      return;
+  private handleOutput(): void {
+    if (this.stringStorage) {
+      this.writeOutput(this.stringStorage);
+      this.stringStorage = "";
+    } else {
+      this.writeOutput(this.value.toString());
     }
+  }
+
+  private isValidVariableName(token: string): boolean {
+    return (
+      !this.isStringLiteral(token) &&
+      !(commandMap[token.toLowerCase()] ?? commandMap[token])
+    );
+  }
+
+  private handleVariableSet(tokens: string[]): void {
+    if (this.programCounter < 2) {
+      throw new Error(
+        "Syntax error for 'nest'. Expected: variableName \"value\" nest"
+      );
+    }
+    const varNameToken = tokens[this.programCounter - 2];
+    const valueToken = tokens[this.programCounter - 1];
+
+    if (!this.isValidVariableName(varNameToken)) {
+      throw new Error(`Invalid variable name: ${varNameToken}`);
+    }
+
+    if (this.isStringLiteral(valueToken)) {
+      this.variables[varNameToken] = valueToken.slice(1, -1);
+    } else {
+      throw new Error(
+        `Invalid value for 'nest': ${valueToken}. Only string literals are supported as values for variables.`
+      );
+    }
+  }
+
+  private handleVariableGet(tokens: string[]): void {
+    if (this.programCounter < 1) {
+      throw new Error("Syntax error for 'fetch'. Expected: variableName fetch");
+    }
+    const varNameToken = tokens[this.programCounter - 1];
+
+    if (!this.isValidVariableName(varNameToken)) {
+      throw new Error(`Invalid variable name: ${varNameToken}`);
+    }
+    if (!(varNameToken in this.variables)) {
+      throw new Error(`Variable '${varNameToken}' not found.`);
+    }
+    this.stringStorage = this.variables[varNameToken];
+  }
+
+  async executeCommand(token: string, tokens: string[]): Promise<void> {
     const command = commandMap[token.toLowerCase()] ?? commandMap[token];
-    if (!command) return;
-    if (command === "output") {
-      if (this.stringStorage) {
-        this.writeOutput(this.stringStorage);
-        this.stringStorage = "";
-      } else {
-        this.writeOutput(this.value.toString());
+
+    if (!command) {
+      if (this.isStringLiteral(token)) {
+        this.stringStorage = token.slice(1, -1);
       }
       return;
+    }
+
+    switch (command) {
+      case "output":
+        this.handleOutput();
+        break;
+
+      case "variable_set":
+        this.handleVariableSet(tokens);
+        break;
+
+      case "variable_get":
+        this.handleVariableGet(tokens);
+        break;
     }
   }
 

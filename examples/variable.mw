@@ -1,0 +1,5 @@
+# Store "Hello from a variable!" in a variable called 'myVar'
+myVar "Hello from a variable!" nest
+
+# Retrieve the value from 'myVar' and print it
+myVar fetch meow
