@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeowJS Interpreter</title>
+    <style>
+      body {
+        font-family: monospace;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>MeowJS Interpreter Output</h1>
+    <pre id="output"></pre>
+
+    <script type="module">
+      import { MeowJSInterpreter } from "./dist/web.js";
+
+      const outputElement = document.getElementById("output");
+
+      try {
+        const interpreter = new MeowJSInterpreter();
+        const code = `
+                # Simple hello world program
+                "Hello World!" meow stretch;
+                "Welcome to MeowJS!" meow stretch;
+            `;
+        const result = await interpreter.interpret(code);
+        outputElement.textContent = result;
+      } catch (error) {
+        outputElement.textContent = `Error: ${error.message}\n${error.stack}`;
+        console.error(error);
+      }
+    </script>
+  </body>
+</html>

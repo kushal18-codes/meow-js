@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/meow-js.js",
-    "test": "vitest"
+    "test": "vitest",
+    "postbuild": "rm -rf web/dist && mkdir -p web/dist && cp dist/web.js web/dist/web.js && cp dist/interpreter.web.js web/dist/interpreter.web.js && cp dist/constants.web.js web/dist/constants.web.js"
   },
   "repository": {
     "type": "git",

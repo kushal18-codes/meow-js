@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "NodeNext",
+    "module": "ESNext",
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
@@ -10,9 +10,21 @@
     "skipLibCheck": true,
     "declaration": true,
     "declarationDir": "dist/types",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Bundler",
     "allowJs": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "dist/**/*", "dist/web/ide.ts"]
+  "include": [
+    "src/**/*",
+    "src/web.ts",
+    "src/interpreter.web.ts",
+    "src/constants.web.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist/**/*",
+    "dist/web/ide.ts",
+    "src/cli.ts",
+    "src/meow-js.ts"
+  ]
 }
