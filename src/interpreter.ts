@@ -233,3 +233,8 @@ export class MeowJSInterpreter {
     this.output += text;
   }
 }
+
+if (typeof window !== "undefined") {
+  // @ts-ignore
+  window.MeowJSInterpreter = MeowJSInterpreter;
+}

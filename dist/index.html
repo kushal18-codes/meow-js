@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeowJS IDE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              coyote: "#766147",
+              cornsilk: "#FEF9E2",
+              bistre: "#331B02",
+              khaki: "#C2A790",
+              sunglow: "#FECD4C",
+              "caf-noir": "#492F0F",
+              melon: "#FEB7A2",
+              chamoisee: "#997A45",
+            },
+            fontFamily: {
+              inter: ["Inter", "sans-serif"],
+              jetbrains: ["JetBrains Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
+    <style>
+      #editor {
+        width: 100%;
+        height: 400px;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+
+  <body class="bg-cornsilk text-bistre font-inter">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold text-chamoisee mb-4">MeowJS IDE</h1>
+      <div id="editor" class="mb-4"></div>
+      <button
+        id="run"
+        class="bg-sunglow text-caf-noir font-semibold py-2 px-4 rounded hover:bg-melon transition duration-200"
+      >
+        Run
+      </button>
+      <h2 class="text-2xl font-semibold text-chamoisee mt-6 mb-2">Output:</h2>
+      <pre
+        id="output"
+        class="bg-khaki text-bistre p-4 rounded font-jetbrains"
+      ></pre>
+    </div>
+    <script src="../constants.js"></script>
+    <script src="../interpreter.js"></script>
+    <script>
+      require.config({
+        paths: {
+          vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs",
+        },
+      });
+      require(["vs/editor/editor.main"], function () {
+        const editor = monaco.editor.create(document.getElementById("editor"), {
+          value: "// Write your MeowJS code here\n",
+          language: "plaintext",
+          theme: "vs-dark",
+          fontFamily: "JetBrains Mono",
+          fontSize: 14,
+          automaticLayout: true,
+        });
+
+        const runButton = document.getElementById("run");
+        const outputElement = document.getElementById("output");
+        const interpreter = new window.MeowJSInterpreter(false, outputElement);
+
+        runButton.addEventListener("click", async () => {
+          outputElement.textContent = "";
+          const code = editor.getValue();
+          const tokens = interpreter.parseCode(code);
+          await interpreter.execute(tokens);
+        });
+      });
+    </script>
+  </body>
+</html>

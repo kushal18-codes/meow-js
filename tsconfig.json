@@ -9,9 +9,10 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
+    "declarationDir": "dist/types",
     "moduleResolution": "NodeNext",
     "allowJs": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "web/ide.ts"]
+  "exclude": ["node_modules", "dist", "dist/**/*", "dist/web/ide.ts"]
 }

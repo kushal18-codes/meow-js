@@ -1,3 +1,0 @@
-# Variable storage and retrieval example
-"hello" nest greeting;    # Store "hello" in variable called "greeting"
-fetch greeting meow;      # Get value from "greeting" variable and output it
