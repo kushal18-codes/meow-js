@@ -45,9 +45,3 @@ export const commandMap: Record<string, string> = {
   crouch: "less_than",
   ";": "statement_end",
 };
-
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { commandMap };
-} else if (typeof window !== "undefined") {
-  (window as any).commandMap = commandMap;
-}

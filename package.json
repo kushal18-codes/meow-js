@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "A cat-themed esoteric programming language",
   "main": "dist/meow-js.js",
+  "type": "module",
   "bin": {
     "meow": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/meow-js.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,9 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^24.0.10",
-    "typescript": "^5.8.3"
+    "jsdom": "^26.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }

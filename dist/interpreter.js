@@ -1,65 +1,6 @@
-"use strict";
-var __createBinding =
-  (this && this.__createBinding) ||
-  (Object.create
-    ? function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (
-          !desc ||
-          ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)
-        ) {
-          desc = {
-            enumerable: true,
-            get: function () {
-              return m[k];
-            },
-          };
-        }
-        Object.defineProperty(o, k2, desc);
-      }
-    : function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        o[k2] = m[k];
-      });
-var __setModuleDefault =
-  (this && this.__setModuleDefault) ||
-  (Object.create
-    ? function (o, v) {
-        Object.defineProperty(o, "default", { enumerable: true, value: v });
-      }
-    : function (o, v) {
-        o["default"] = v;
-      });
-var __importStar =
-  (this && this.__importStar) ||
-  (function () {
-    var ownKeys = function (o) {
-      ownKeys =
-        Object.getOwnPropertyNames ||
-        function (o) {
-          var ar = [];
-          for (var k in o)
-            if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-          return ar;
-        };
-      return ownKeys(o);
-    };
-    return function (mod) {
-      if (mod && mod.__esModule) return mod;
-      var result = {};
-      if (mod != null)
-        for (var k = ownKeys(mod), i = 0; i < k.length; i++)
-          if (k[i] !== "default") __createBinding(result, mod, k[i]);
-      __setModuleDefault(result, mod);
-      return result;
-    };
-  })();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MeowJSInterpreter = void 0;
-const constants_1 = require("./constants");
-const fs = __importStar(require("fs"));
-class MeowJSInterpreter {
+import { commandMap } from "./constants.js";
+import * as fs from "fs";
+export class MeowJSInterpreter {
   constructor(debug = false, outputElement = null) {
     this.value = 0;
     this.stack = [];
@@ -108,7 +49,7 @@ class MeowJSInterpreter {
       } else if (match[2]) {
         tokens.push(match[2]);
       } else if (match[3]) {
-        // Ignore comments
+        continue;
       } else if (match[4]) {
         tokens.push(match[4]);
       } else if (match[5]) {
@@ -126,9 +67,7 @@ class MeowJSInterpreter {
     const ifStack = [];
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
-      const command =
-        constants_1.commandMap[token.toLowerCase()] ??
-        constants_1.commandMap[token];
+      const command = commandMap[token.toLowerCase()] ?? commandMap[token];
       if (command === "loop_start") {
         loopStack.push(i);
       } else if (command === "if_start") {
@@ -160,23 +99,99 @@ class MeowJSInterpreter {
     }
     return this.output;
   }
-  async executeCommand(token, tokens) {
-    if (this.isStringLiteral(token)) {
-      this.stringStorage = token.slice(1, -1);
-      return;
+  handleOutput() {
+    if (this.stringStorage) {
+      this.writeOutput(this.stringStorage);
+      this.stringStorage = "";
+    } else {
+      this.writeOutput(this.value.toString());
     }
-    const command =
-      constants_1.commandMap[token.toLowerCase()] ??
-      constants_1.commandMap[token];
-    if (!command) return;
-    if (command === "output") {
-      if (this.stringStorage) {
-        this.writeOutput(this.stringStorage);
-        this.stringStorage = "";
-      } else {
-        this.writeOutput(this.value.toString());
+  }
+  isValidVariableName(token) {
+    return (
+      !this.isStringLiteral(token) &&
+      !(commandMap[token.toLowerCase()] ?? commandMap[token])
+    );
+  }
+  handleVariableSet(tokens) {
+    if (this.programCounter < 2) {
+      throw new Error(
+        "Syntax error for 'nest'. Expected: variableName \"value\" nest",
+      );
+    }
+    const varNameToken = tokens[this.programCounter - 2];
+    const valueToken = tokens[this.programCounter - 1];
+    if (!this.isValidVariableName(varNameToken)) {
+      throw new Error(`Invalid variable name: ${varNameToken}`);
+    }
+    if (this.isStringLiteral(valueToken)) {
+      this.variables[varNameToken] = valueToken.slice(1, -1);
+    } else {
+      throw new Error(
+        `Invalid value for 'nest': ${valueToken}. Only string literals are supported as values for variables.`,
+      );
+    }
+  }
+  handleVariableGet(tokens) {
+    if (this.programCounter < 1) {
+      throw new Error("Syntax error for 'fetch'. Expected: variableName fetch");
+    }
+    const varNameToken = tokens[this.programCounter - 1];
+    if (!this.isValidVariableName(varNameToken)) {
+      throw new Error(`Invalid variable name: ${varNameToken}`);
+    }
+    if (!(varNameToken in this.variables)) {
+      throw new Error(`Variable '${varNameToken}' not found.`);
+    }
+    this.stringStorage = this.variables[varNameToken];
+  }
+  async executeCommand(token, tokens) {
+    const command = commandMap[token.toLowerCase()] ?? commandMap[token];
+    if (!command) {
+      if (this.isStringLiteral(token)) {
+        this.stringStorage = token.slice(1, -1);
       }
       return;
+    }
+    switch (command) {
+      case "output":
+        this.handleOutput();
+        break;
+      case "increment":
+        this.value++;
+        break;
+      case "decrement":
+        this.value--;
+        break;
+      case "reset":
+        this.value = 0;
+        break;
+      case "double":
+        this.value *= 2;
+        break;
+      case "loop_start":
+        if (this.value === 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "loop_end":
+        if (this.value !== 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "if_start":
+        if (this.value === 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "if_end":
+        break;
+      case "variable_set":
+        this.handleVariableSet(tokens);
+        break;
+      case "variable_get":
+        this.handleVariableGet(tokens);
+        break;
     }
   }
   isStringLiteral(token) {
@@ -187,16 +202,12 @@ class MeowJSInterpreter {
   }
   writeOutput(text) {
     if (typeof process !== "undefined" && process.stdout) {
-      process.stdout.write(text);
+      if (!process.env.VITEST) {
+        process.stdout.write(text);
+      }
     } else if (this.outputElement) {
       this.outputElement.textContent += text;
     }
     this.output += text;
   }
-}
-exports.MeowJSInterpreter = MeowJSInterpreter;
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { MeowJSInterpreter };
-} else if (typeof window !== "undefined") {
-  window.MeowJSInterpreter = MeowJSInterpreter;
 }

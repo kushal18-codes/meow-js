@@ -1,4 +1,4 @@
-import { MeowJSInterpreter } from "./interpreter";
+import { MeowJSInterpreter } from "./interpreter.js";
 import * as fs from "fs";
 import * as readline from "readline";
 

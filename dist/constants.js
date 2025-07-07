@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.commandMap = void 0;
 // ...existing code...
-exports.commandMap = {
+export const commandMap = {
   meow: "output",
   purr: "increment",
   hiss: "decrement",
@@ -48,8 +45,3 @@ exports.commandMap = {
   crouch: "less_than",
   ";": "statement_end",
 };
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { commandMap: exports.commandMap };
-} else if (typeof window !== "undefined") {
-  window.commandMap = exports.commandMap;
-}

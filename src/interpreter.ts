@@ -1,4 +1,4 @@
-import { commandMap } from "./constants";
+import { commandMap } from "./constants.js";
 import * as fs from "fs";
 
 export class MeowJSInterpreter {
@@ -128,7 +128,7 @@ export class MeowJSInterpreter {
   private handleVariableSet(tokens: string[]): void {
     if (this.programCounter < 2) {
       throw new Error(
-        "Syntax error for 'nest'. Expected: variableName \"value\" nest"
+        "Syntax error for 'nest'. Expected: variableName \"value\" nest",
       );
     }
     const varNameToken = tokens[this.programCounter - 2];
@@ -142,7 +142,7 @@ export class MeowJSInterpreter {
       this.variables[varNameToken] = valueToken.slice(1, -1);
     } else {
       throw new Error(
-        `Invalid value for 'nest': ${valueToken}. Only string literals are supported as values for variables.`
+        `Invalid value for 'nest': ${valueToken}. Only string literals are supported as values for variables.`,
       );
     }
   }
@@ -176,7 +176,35 @@ export class MeowJSInterpreter {
       case "output":
         this.handleOutput();
         break;
-
+      case "increment":
+        this.value++;
+        break;
+      case "decrement":
+        this.value--;
+        break;
+      case "reset":
+        this.value = 0;
+        break;
+      case "double":
+        this.value *= 2;
+        break;
+      case "loop_start":
+        if (this.value === 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "loop_end":
+        if (this.value !== 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "if_start":
+        if (this.value === 0) {
+          this.programCounter = this.jumpMap[this.programCounter];
+        }
+        break;
+      case "if_end":
+        break;
       case "variable_set":
         this.handleVariableSet(tokens);
         break;
@@ -196,16 +224,12 @@ export class MeowJSInterpreter {
 
   writeOutput(text: string) {
     if (typeof process !== "undefined" && process.stdout) {
-      process.stdout.write(text);
+      if (!process.env.VITEST) {
+        process.stdout.write(text);
+      }
     } else if (this.outputElement) {
       this.outputElement.textContent += text;
     }
     this.output += text;
   }
-}
-
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { MeowJSInterpreter };
-} else if (typeof window !== "undefined") {
-  (window as any).MeowJSInterpreter = MeowJSInterpreter;
 }

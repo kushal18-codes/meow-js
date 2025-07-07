@@ -19,6 +19,10 @@ export declare class MeowJSInterpreter {
   parseCode(code?: string): string[];
   preProcessJumps(tokens: string[]): Record<string, any>;
   execute(tokens: string[]): Promise<string>;
+  private handleOutput;
+  private isValidVariableName;
+  private handleVariableSet;
+  private handleVariableGet;
   executeCommand(token: string, tokens: string[]): Promise<void>;
   isStringLiteral(token: string): boolean;
   writeOutput(text: string): void;
