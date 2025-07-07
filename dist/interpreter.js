@@ -41,23 +41,40 @@ export class MeowJSInterpreter {
   }
   parseCode(code = "") {
     const tokens = [];
-    const regex = /(".*?")|('.*?')|(#.*)|([a-zA-Z_]\w*)|(;)/gm;
+    // Regex to match:
+    // 1. Double-quoted strings: (".*?")
+    // 2. Single-quoted strings: ('.*?')
+    // 3. Comments: (#.*)
+    // 4. Numbers: (\b\d+\b) - whole numbers only
+    // 5. Words (commands/variables): ([a-zA-Z_]\w*)
+    // 6. Semicolon: (;)
+    const regex = /(".*?")|('.*?')|(#.*)|(\b\d+\b)|([a-zA-Z_]\w*)|(;)/gm;
     let match;
     while ((match = regex.exec(code)) !== null) {
+      // Group 1: Double-quoted string
       if (match[1]) {
         tokens.push(match[1]);
-      } else if (match[2]) {
+      }
+      // Group 2: Single-quoted string
+      else if (match[2]) {
         tokens.push(match[2]);
-      } else if (match[3]) {
+      }
+      // Group 3: Comment (ignore)
+      else if (match[3]) {
         continue;
-      } else if (match[4]) {
+      }
+      // Group 4: Number
+      else if (match[4]) {
         tokens.push(match[4]);
-      } else if (match[5]) {
+      }
+      // Group 5: Word (command or variable name)
+      else if (match[5]) {
         tokens.push(match[5]);
       }
-    }
-    if (this.debug) {
-      console.log("Parsed tokens:", tokens);
+      // Group 6: Semicolon
+      else if (match[6]) {
+        tokens.push(match[6]);
+      }
     }
     return tokens;
   }
@@ -100,11 +117,14 @@ export class MeowJSInterpreter {
     return this.output;
   }
   handleOutput() {
-    if (this.stringStorage) {
-      this.writeOutput(this.stringStorage);
-      this.stringStorage = "";
+    if (this.stack.length === 0) {
+      throw new Error("Stack underflow for 'meow'.");
+    }
+    const outputValue = this.stack.pop();
+    if (outputValue !== undefined) {
+      this.writeOutput(outputValue.toString());
     } else {
-      this.writeOutput(this.value.toString());
+      throw new Error("Stack underflow for 'meow'.");
     }
   }
   isValidVariableName(token) {
@@ -113,43 +133,56 @@ export class MeowJSInterpreter {
       !(commandMap[token.toLowerCase()] ?? commandMap[token])
     );
   }
-  handleVariableSet(tokens) {
-    if (this.programCounter < 2) {
+  handleVariableSet() {
+    if (this.stack.length < 2) {
       throw new Error(
-        "Syntax error for 'nest'. Expected: variableName \"value\" nest",
+        "Stack underflow for 'nest'. Expected: value variableName nest",
       );
     }
-    const varNameToken = tokens[this.programCounter - 2];
-    const valueToken = tokens[this.programCounter - 1];
-    if (!this.isValidVariableName(varNameToken)) {
-      throw new Error(`Invalid variable name: ${varNameToken}`);
+    const varName = this.stack.pop();
+    const valueToStore = this.stack.pop();
+    if (typeof varName !== "string" || !this.isValidVariableName(varName)) {
+      throw new Error(`Invalid variable name: ${varName}`);
     }
-    if (this.isStringLiteral(valueToken)) {
-      this.variables[varNameToken] = valueToken.slice(1, -1);
-    } else {
-      throw new Error(
-        `Invalid value for 'nest': ${valueToken}. Only string literals are supported as values for variables.`,
-      );
-    }
+    this.variables[varName] = valueToStore;
   }
-  handleVariableGet(tokens) {
-    if (this.programCounter < 1) {
-      throw new Error("Syntax error for 'fetch'. Expected: variableName fetch");
+  handleVariableGet() {
+    if (this.stack.length < 1) {
+      throw new Error(
+        "Stack underflow for 'fetch'. Expected: variableName fetch",
+      );
     }
-    const varNameToken = tokens[this.programCounter - 1];
-    if (!this.isValidVariableName(varNameToken)) {
-      throw new Error(`Invalid variable name: ${varNameToken}`);
+    const varName = this.stack.pop();
+    if (typeof varName !== "string" || !this.isValidVariableName(varName)) {
+      throw new Error(`Invalid variable name: ${varName}`);
     }
-    if (!(varNameToken in this.variables)) {
-      throw new Error(`Variable '${varNameToken}' not found.`);
+    if (!(varName in this.variables)) {
+      throw new Error(`Variable '${varName}' not found.`);
     }
-    this.stringStorage = this.variables[varNameToken];
+    this.stack.push(this.variables[varName]);
+  }
+  handleArithmetic(operation) {
+    if (this.stack.length < 2) {
+      throw new Error(
+        "Stack underflow for arithmetic operation. Expected: operand1 operand2 operation",
+      );
+    }
+    const operand2 = this.stack.pop();
+    const operand1 = this.stack.pop();
+    if (typeof operand1 !== "number" || typeof operand2 !== "number") {
+      throw new Error("Arithmetic operations require numeric operands.");
+    }
+    this.stack.push(operation(operand1, operand2));
   }
   async executeCommand(token, tokens) {
     const command = commandMap[token.toLowerCase()] ?? commandMap[token];
     if (!command) {
       if (this.isStringLiteral(token)) {
-        this.stringStorage = token.slice(1, -1);
+        this.stack.push(token.slice(1, -1)); // Push string literal onto stack
+      } else if (!isNaN(Number(token)) && token !== "") {
+        this.stack.push(Number(token)); // Push number literal onto stack
+      } else if (this.isValidVariableName(token)) {
+        this.stack.push(token); // Push variable name onto stack
       }
       return;
     }
@@ -159,15 +192,19 @@ export class MeowJSInterpreter {
         break;
       case "increment":
         this.value++;
+        this.stack.push(this.value);
         break;
       case "decrement":
         this.value--;
+        this.stack.push(this.value);
         break;
       case "reset":
         this.value = 0;
+        this.stack.push(this.value);
         break;
       case "double":
         this.value *= 2;
+        this.stack.push(this.value);
         break;
       case "loop_start":
         if (this.value === 0) {
@@ -187,27 +224,36 @@ export class MeowJSInterpreter {
       case "if_end":
         break;
       case "variable_set":
-        this.handleVariableSet(tokens);
+        this.handleVariableSet();
         break;
       case "variable_get":
-        this.handleVariableGet(tokens);
+        this.handleVariableGet();
+        break;
+      case "add":
+        this.handleArithmetic((a, b) => a + b);
+        break;
+      case "subtract":
+        this.handleArithmetic((a, b) => a - b);
+        break;
+      case "store_string":
+        if (this.stack.length === 0) {
+          throw new Error("Stack underflow for 'catnip'.");
+        }
+        this.stringStorage = this.stack.pop();
+        break;
+      case "retrieve_string":
+        this.stack.push(this.stringStorage);
         break;
     }
   }
   isStringLiteral(token) {
     return (
       (token.startsWith('"') && token.endsWith('"')) ||
-      (token.startsWith("'") && token.endsWith("'"))
+      (token.startsWith("(") && token.endsWith(")"))
     );
   }
   writeOutput(text) {
-    if (typeof process !== "undefined" && process.stdout) {
-      if (!process.env.VITEST) {
-        process.stdout.write(text);
-      }
-    } else if (this.outputElement) {
-      this.outputElement.textContent += text;
-    }
+    console.log(text);
     this.output += text;
   }
 }

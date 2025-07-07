@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect } from "vitest";
 import { MeowJSInterpreter } from "../dist/interpreter.js";
 
 describe("MeowJSInterpreter", () => {
@@ -67,15 +68,15 @@ describe("MeowJSInterpreter", () => {
     });
 
     it("should handle variable set and get", async () => {
-      const tokens = ["myVar", '"hello"', "nest", "myVar", "fetch", "meow"];
+      const tokens = ['"hello"', "myVar", "nest", "myVar", "fetch", "meow"];
       const output = await interpreter.execute(tokens);
       expect(output).toBe("hello");
     });
 
     it("should handle basic arithmetic", async () => {
-      const tokens = ["purr", "purr", "purr", "hiss", "meow"];
+      const tokens = ["1", "2", "leap", "meow"]; // 1 + 2 = 3
       const output = await interpreter.execute(tokens);
-      expect(output).toBe("2");
+      expect(output).toBe("3");
     });
 
     it("should handle loops", async () => {

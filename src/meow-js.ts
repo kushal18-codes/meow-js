@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { MeowJSInterpreter } from "../dist/interpreter.js";
-import { MeowJSCommandLine } from "../dist/cli.js";
+import { MeowJSInterpreter } from "./interpreter.js";
+import { MeowJSCommandLine } from "./cli.js";
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   MeowJSCommandLine.main().catch(console.error);
 }
 

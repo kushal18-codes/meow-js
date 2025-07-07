@@ -2,7 +2,7 @@ export declare class MeowJSInterpreter {
   debug: boolean;
   outputElement: HTMLElement | null;
   value: number;
-  stack: number[];
+  stack: any[];
   memory: number[];
   loopStack: any[];
   ifStack: any[];
@@ -23,6 +23,7 @@ export declare class MeowJSInterpreter {
   private isValidVariableName;
   private handleVariableSet;
   private handleVariableGet;
+  private handleArithmetic;
   executeCommand(token: string, tokens: string[]): Promise<void>;
   isStringLiteral(token: string): boolean;
   writeOutput(text: string): void;

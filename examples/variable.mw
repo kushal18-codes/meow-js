@@ -1,5 +1,20 @@
-# Store "Hello from a variable!" in a variable called 'myVar'
-myVar "Hello from a variable!" nest
+# Variable storage and retrieval example
+
+# Store a string in a variable
+"Hello from a variable!" "myVar" nest;
 
 # Retrieve the value from 'myVar' and print it
-myVar fetch meow
+"myVar" fetch meow;
+
+# Store a number in a variable
+10 "count" nest;
+
+# Retrieve and print the number
+"count" fetch meow;
+
+# Update the value of a variable
+20 "count" nest;
+
+# Retrieve and print the updated number
+"count" fetch meow;
+

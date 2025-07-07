@@ -1,4 +1,21 @@
 # Data structure storage example
-"data1" climb "data2" climb 1 litter;  # Push two strings to stack, store at key 1
-1 box fall meow;                       # Retrieve data from key 1, pop and output first item
-fall meow;                             # Pop and output second item
+
+# Store a list of items at key "myList"
+"item1" climb "item2" climb "item3" climb "myList" litter;
+
+# Retrieve the list and print its contents
+"myList" box;
+fall meow; # Output: item3
+fall meow; # Output: item2
+fall meow; # Output: item1
+
+# Store a key-value pair (dictionary-like) at key "myDict"
+"valueA" climb "keyA" climb "valueB" climb "keyB" climb "myDict" litter;
+
+# Retrieve the dictionary and demonstrate accessing values (conceptual, as direct key access isn't shown)
+"myDict" box;
+fall meow; # Output: keyB
+fall meow; # Output: valueB
+fall meow; # Output: keyA
+fall meow; # Output: valueA
+

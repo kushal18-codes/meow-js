@@ -1,4 +1,28 @@
 # Conditional comparison example
-5 nest number1;                          # Store 5 in variable "number1"
-3 nest number2;                          # Store 3 in variable "number2"
-fetch number1 fetch number2 tower whiskers "greater" meow tail;  # Compare if number1 > number2, if true output "greater"
+
+# Example 1: Greater Than
+# Check if 5 is greater than 3
+5 climb;
+3 climb;
+tower whiskers "5 is greater than 3" meow tail;
+
+# Example 2: Less Than
+# Check if 3 is less than 5
+3 climb;
+5 climb;
+crouch whiskers "3 is less than 5" meow tail;
+
+# Example 3: Equals
+# Check if 5 is equal to 5
+5 climb;
+5 climb;
+sniff whiskers "5 is equal to 5" meow tail;
+
+# Example 4: Not Equal (using a combination of sniff and whiskers)
+# Check if 5 is not equal to 3
+5 climb;
+3 climb;
+sniff whiskers "5 is equal to 3 (this should not print)" meow tail;
+# To express "not equal", you would typically use a combination of sniff and then
+# an inverted logic or a separate command if available.
+# For now, we'll just show the equality check.

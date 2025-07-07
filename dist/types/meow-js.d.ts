@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { MeowJSInterpreter } from "../dist/interpreter.js";
-import { MeowJSCommandLine } from "../dist/cli.js";
+import { MeowJSInterpreter } from "./interpreter.js";
+import { MeowJSCommandLine } from "./cli.js";
 export { MeowJSInterpreter, MeowJSCommandLine };

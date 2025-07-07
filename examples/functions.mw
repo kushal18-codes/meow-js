@@ -1,3 +1,10 @@
 # Function definition and calling example
-"hello" meow prowl sayHello;  # Define function "sayHello" that outputs "hello"
-fetch sayHello stalk;         # Call the "sayHello" function
+
+# Define a function named 'greet' that takes a name as an argument
+# and prints a greeting message.
+"Hello, " climb fetch climb "! Meow!" climb meow prowl greet;
+
+# Call the 'greet' function with different names
+"Whiskers" greet stalk;
+"Mittens" greet stalk;
+

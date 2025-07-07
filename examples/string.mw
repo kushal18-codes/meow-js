@@ -1,3 +1,14 @@
 # String storage and retrieval example
-"world" catnip;         # Store "world" in string storage
-"hello" paw meow;       # Store "hello" in string storage, then output it
+
+# Store a string using catnip
+"MeowJS is fun!" catnip;
+
+# Retrieve the stored string using paw and print it
+paw meow;
+
+# Store another string
+"Cats are awesome." catnip;
+
+# Retrieve and print the new string
+paw meow;
+
