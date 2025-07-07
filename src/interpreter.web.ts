@@ -260,10 +260,10 @@ export class MeowJSInterpreter {
         this.handleVariableGet();
         break;
       case "add":
-        this.handleArithmetic((a, b) => a + b);
+        this.handleArithmetic((a: number, b: number) => a + b);
         break;
       case "subtract":
-        this.handleArithmetic((a, b) => a - b);
+        this.handleArithmetic((a: number, b: number) => a - b);
         break;
       case "store_string":
         if (this.stack.length === 0) {
@@ -288,7 +288,15 @@ export class MeowJSInterpreter {
   }
 
   writeOutput(text: string) {
-    console.log(text);
+    console.log("Writing output: ", JSON.stringify(text));
     this.output += text;
+    if (this.outputElement) {
+      this.outputElement.textContent += text;
+    }
   }
+}
+
+if (typeof window !== "undefined") {
+  // @ts-ignore
+  window.MeowJSInterpreter = MeowJSInterpreter;
 }
